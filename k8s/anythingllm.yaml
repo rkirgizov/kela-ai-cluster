@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kela-anythingllm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kela-anythingllm
+  template:
+    metadata:
+      labels:
+        app: kela-anythingllm
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+      - name: anythingllm
+        image: dockerhub.timeweb.cloud/mintplexlabs/anythingllm:master
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3001
+        command: ["/bin/sh", "-c"]
+        args: ["cd /app/server && npx prisma generate && npx prisma migrate deploy && (node /app/collector/index.js &) ; exec node /app/server/index.js"]
+        env:
+        - name: STORAGE_DIR
+          value: "/app/server/storage"
+        - name: DATABASE_URL
+          value: "file:/app/server/storage/anythingllm.db"
+        volumeMounts:
+        - name: anythingllm-storage
+          mountPath: /app/server/storage
+        - name: anythingllm-storage
+          mountPath: /app/server/.env
+          subPath: .env
+      volumes:
+      - name: anythingllm-storage
+        hostPath:
+          path: /opt/anythingllm
+          type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kela-anythingllm-service
+spec:
+  type: NodePort
+  ports:
+  - port: 3001
+    targetPort: 3001
+    nodePort: 32001
+  selector:
+    app: kela-anythingllm
+

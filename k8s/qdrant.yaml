@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kela-qdrant-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kela-qdrant
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kela-qdrant
+  template:
+    metadata:
+      labels:
+        app: kela-qdrant
+    spec:
+      containers:
+      - name: qdrant
+        # Точное имя образа, который мы импортировали в кэш
+        image: dockerhub.timeweb.cloud/qdrant/qdrant:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 6333
+        volumeMounts:
+        - name: qdrant-storage
+          mountPath: /qdrant/storage
+      volumes:
+      - name: qdrant-storage
+        persistentVolumeClaim:
+          claimName: kela-qdrant-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kela-qdrant-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6333
+    targetPort: 6333
+  selector:
+    app: kela-qdrant
+
