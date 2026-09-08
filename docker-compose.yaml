@@ -2,7 +2,7 @@ services:
   ollama-gpu:
     image: dockerhub.timeweb.cloud/ollama/ollama:rocm
     # Указываем короткое имя для команд терминала
-    container_name: ollama
+    container_name: ollama-gpu
     devices:
       - "/dev/kfd:/dev/kfd"
       - "/dev/dri:/dev/dri"
@@ -21,13 +21,9 @@ services:
       - OLLAMA_MAX_LOADED_MODELS=1       # только одна модель в памяти
       - OLLAMA_NUM_PARALLEL=1            # один запрос за раз (экономия памяти)
       - OLLAMA_KEEP_ALIVE=30m            # держать модель 30 минут после последнего запроса
+      - OLLAMA_CONTEXT_LENGTH=32768
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    scale: 1  # Создаст 0 копий этого контейнера (пропустит запуск)
 
   comfyui-gpu:
     image: dockerhub.timeweb.cloud/yanwk/comfyui-boot:rocm
@@ -41,16 +37,11 @@ services:
       - seccomp=unconfined
     volumes:
       - /opt/comfyui/root:/root
-      - /home/kirgizov/_projects/comfyui/comfyui-kela-ollama:/root/ComfyUI/custom_nodes/comfyui-kela-ollama  
+      - /home/kirgizov/_projects/comfyui/comfyui-kela-ollama:/root/ComfyUI/custom_nodes/comfyui-kela-ollama
+      - /opt/rocm:/opt/rocm:ro
     ports:
       - "8188:8188"
     environment:
       - HSA_OVERRIDE_GFX_VERSION=12.0.0
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8188/system_stats"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-
+    scale: 1  # Создаст 0 копий этого контейнера (пропустит запуск)
