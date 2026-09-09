@@ -37,6 +37,9 @@ services:
       - seccomp=unconfined
     volumes:
       - /opt/comfyui/root:/root
+      # Монтируем новый NVMe напрямую в папку моделей внутри контейнера:
+      - /mnt/nvme-adata/comfyui_models:/root/ComfyUI/models
+      # Монтируем проект comfyui-kela-ollama
       - /home/kirgizov/_projects/comfyui/comfyui-kela-ollama:/root/ComfyUI/custom_nodes/comfyui-kela-ollama
       - /opt/rocm:/opt/rocm:ro
     ports:

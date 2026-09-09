@@ -14,6 +14,7 @@ spec:
     spec:
       securityContext:
         fsGroup: 1000
+        runAsUser: 0
       containers:
       - name: anythingllm
         image: dockerhub.timeweb.cloud/mintplexlabs/anythingllm:master
@@ -51,4 +52,3 @@ spec:
     nodePort: 32001
   selector:
     app: kela-anythingllm
-
